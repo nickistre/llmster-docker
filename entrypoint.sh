@@ -15,6 +15,13 @@ if [ ! -x "$LMS_BIN" ]; then
     exit 1
 fi
 
+echo "[entrypoint] attempting to update lms runtimes..."
+if "$LMS_BIN" runtime update; then
+    echo "[entrypoint] runtime update succeeded"
+else
+    echo "[entrypoint] WARNING: runtime update failed; continuing with existing runtimes" >&2
+fi
+
 trap '"$LMS_BIN" server stop; "$LMS_BIN" daemon down' TERM INT
 "$LMS_BIN" daemon up
 "$LMS_BIN" server start
