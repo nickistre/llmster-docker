@@ -77,10 +77,13 @@ RUN echo '#!/bin/sh' > /healthcheck.sh && \
     echo 'curl -f http://localhost:1234/v1/models || exit 1' >> /healthcheck.sh && \
     chmod +x /healthcheck.sh
 
-EXPOSE 1234
-
 # =============================================================================
 # Entry Point
 # =============================================================================
 
-CMD ["/bin/sh", "-c", "trap '/root/.lmstudio/bin/lms server stop; /root/.lmstudio/bin/lms daemon down' TERM INT && /root/.lmstudio/bin/lms daemon up && /root/.lmstudio/bin/lms server start && tail -f /dev/null & wait $!"]
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 1234
+
+ENTRYPOINT ["/entrypoint.sh"]

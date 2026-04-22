@@ -1,26 +1,24 @@
 # =============================================================================
-# LLMster + AnythingLLM Container Orchestration
+# LLMster Container Orchestration
 # =============================================================================
 #
 # Architecture:
 # - llmster: Headless LM Studio server with AMD GPU support
-# - anythingllm: Client application connecting to LLMster
-# - Both containers share podman network for internal communication
 # =============================================================================
 
-name: llm-anythingllm
+name: llmster
 
 services:
   # ============================================
   # LLMSTER - Headless LM Studio Server
   # ============================================
   llmster:
-    image: nickistre/llmster:latest
+    image: nickistre/llmster
     build:
       context: .
       dockerfile: Dockerfile.llmster
       pull: true
-    pull_policy: always
+    pull_policy: build
 
     container_name: llmster
 
@@ -59,7 +57,6 @@ services:
       - AUTO_UNLOAD=true
       - UNLOAD_IDLE_TIME=300
 
-      # Internal Communication (allow AnythingLLM to connect)
       - OLLAMA_ORIGINS=*
       - LMS_SERVER_HOST=0.0.0.0
 
@@ -67,25 +64,18 @@ services:
     # MODEL DIRECTORY MOUNT - Gradual Migration Support
     # ========================================================================
     volumes:
-      # Primary: Project models directory (read-only for safety)
-      - ./.lmstudio/models:/root/.lmstudio/models:rw,Z
-
-      # # Fallback 1: Host LM Studio location (for gradual migration)
-      # - /var/home/nick/.lmstudio/models:/host-lmstudio-models:ro
-
-      # # Fallback 2: Ollama models (if needed during transition)
-      # - /var/home/nick/.ollama/models/bin:/host-ollama-models:ro
+      - lmstudio-data:/root/.lmstudio
 
     # ========================================================================
     # RESOURCE LIMITS
     # ========================================================================
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       memory: 8G
-    #     limits:
-    #       cpus: "4"
-    #       memory: 24G
+    deploy:
+      resources:
+        reservations:
+          memory: 8G
+        limits:
+          cpus: "4"
+          memory: 24G
 
     # ========================================================================
     # HEALTH CHECK
@@ -116,5 +106,4 @@ networks:
 # VOLUMES (if needed for future expansion)
 # =============================================================================
 volumes:
-  # ollama-data:  # Can be removed if not used
-  #   driver: local
+  lmstudio-data:

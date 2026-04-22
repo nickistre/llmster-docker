@@ -34,9 +34,10 @@ curl http://localhost:1234/v1/models
 
 **Single service** (`llmster`) defined in `docker-compose.yaml`:
 - Base image: `debian:trixie-slim`
-- Installs LM Studio via the official `lmstudio.ai/install.sh` installer
+- Installs LM Studio via `lmstudio.ai/install.sh` at **image build time** (fallback) and again at **every container start** (`entrypoint.sh`) to stay current
+- If the startup install fails (network unavailable), the entrypoint logs a warning and continues with the baked-in install — the server still starts
 - Adds Mesa Vulkan drivers (`mesa-vulkan-drivers`) for AMD GPU access
-- Entrypoint brings up the LM Studio daemon, then starts the server; traps SIGTERM/SIGINT for clean shutdown
+- Traps SIGTERM/SIGINT for clean daemon/server shutdown
 - Health check hits `GET /v1/models` on port 1234
 
 **GPU access** requires host device passthrough:
@@ -44,7 +45,7 @@ curl http://localhost:1234/v1/models
 - `/dev/kfd` — ROCm kernel driver
 - `/dev/fuse` — FUSE filesystem (used by LM Studio AppImage internals)
 
-**Model storage**: models are bind-mounted from `./.lmstudio/models` into `/root/.lmstudio/models` inside the container. Populate this directory on the host before starting.
+**Persistent storage**: the named volume `lmstudio-data` is mounted at `/root/.lmstudio`, covering binaries, runtime, config, and models. A fresh volume is seeded from the image's baked-in install on first run. Models survive `podman compose down` but are wiped by `podman compose down -v`.
 
 **Key environment variables** (set in both Dockerfile defaults and compose overrides):
 | Variable | Purpose |
@@ -61,6 +62,5 @@ curl http://localhost:1234/v1/models
 
 ## Notes
 
-- The compose file references an AnythingLLM service in comments/naming but it is not yet defined — the `llm-net` network and naming (`llm-anythingllm`) anticipate adding it.
 - Resource limits (CPU/memory) are commented out in compose; uncomment and tune based on available hardware.
-- The image is published to `nickistre/llmster:latest`; `pull_policy: always` means compose will pull a fresh image on each `up` unless you're building locally.
+- `pull_policy: build` means compose always builds from the Dockerfile rather than pulling from a registry; the `pull: true` inside the `build:` block keeps the base `debian:trixie-slim` image fresh.
