@@ -59,10 +59,13 @@ ENV LIBVA_DRIVER_NAME=radeonsi \
 # =============================================================================
 
 # Enable JIT loading and auto-unload by default
-ENV JIT_LOADING=true \
+ENV PATH=/root/.lmstudio/bin:$PATH \
+    JIT_LOADING=true \
     AUTO_UNLOAD=true \
     UNLOAD_IDLE_TIME=300 \
-    LLMSTER_PORT=1234
+    LLMSTER_PORT=1234 \
+    LM_STUDIO_UPDATE=0 \
+    LMS_RUNTIME_UPDATE=0
 
 # Allow internal container communication
 ENV OLLAMA_ORIGINS=* \

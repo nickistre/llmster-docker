@@ -96,6 +96,8 @@ services:
       - OLLAMA_ORIGINS=*
       - LMS_SERVER_HOST=0.0.0.0
 
+    env_file: .env
+
     # ========================================================================
     # MODEL DIRECTORY MOUNT - Gradual Migration Support
     # ========================================================================
