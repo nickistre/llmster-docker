@@ -1,0 +1,120 @@
+# =============================================================================
+# LLMster + AnythingLLM Container Orchestration
+# =============================================================================
+#
+# Architecture:
+# - llmster: Headless LM Studio server with AMD GPU support
+# - anythingllm: Client application connecting to LLMster
+# - Both containers share podman network for internal communication
+# =============================================================================
+
+name: llm-anythingllm
+
+services:
+  # ============================================
+  # LLMSTER - Headless LM Studio Server
+  # ============================================
+  llmster:
+    image: nickistre/llmster:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.llmster
+      pull: true
+    pull_policy: always
+
+    container_name: llmster
+
+    restart: unless-stopped
+
+    # ========================================================================
+    # PORT EXPOSURE - Access from host
+    # ========================================================================
+    ports:
+      - "1234:1234" # LLMster API port
+
+    # ========================================================================
+    # NETWORK CONFIGURATION - Name Resolution (No Static IPs)
+    # ========================================================================
+    networks:
+      llm-net: {}
+
+    # ========================================================================
+    # GPU DEVICE ACCESS - AMD Vulcan/ROCm Support
+    # ========================================================================
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/kfd:/dev/kfd
+      - /dev/fuse:/dev/fuse
+
+    # ========================================================================
+    # ENVIRONMENT CONFIGURATION
+    # ========================================================================
+    environment:
+      # GPU Configuration
+      - LIBVA_DRIVER_NAME=radeonsi
+
+      # LLMster Configuration
+      - LLMSTER_PORT=1234
+      - JIT_LOADING=true
+      - AUTO_UNLOAD=true
+      - UNLOAD_IDLE_TIME=300
+
+      # Internal Communication (allow AnythingLLM to connect)
+      - OLLAMA_ORIGINS=*
+      - LMS_SERVER_HOST=0.0.0.0
+
+    # ========================================================================
+    # MODEL DIRECTORY MOUNT - Gradual Migration Support
+    # ========================================================================
+    volumes:
+      # Primary: Project models directory (read-only for safety)
+      - ./.lmstudio/models:/root/.lmstudio/models:rw,Z
+
+      # # Fallback 1: Host LM Studio location (for gradual migration)
+      # - /var/home/nick/.lmstudio/models:/host-lmstudio-models:ro
+
+      # # Fallback 2: Ollama models (if needed during transition)
+      # - /var/home/nick/.ollama/models/bin:/host-ollama-models:ro
+
+    # ========================================================================
+    # RESOURCE LIMITS
+    # ========================================================================
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       memory: 8G
+    #     limits:
+    #       cpus: "4"
+    #       memory: 24G
+
+    # ========================================================================
+    # HEALTH CHECK
+    # ========================================================================
+    healthcheck:
+      test: ["CMD", "/healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    # ========================================================================
+    # LOGGING CONFIGURATION
+    # ========================================================================
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# =============================================================================
+# NETWORK CONFIGURATION - Name Resolution Enabled by Default
+# =============================================================================
+networks:
+  llm-net:
+
+# =============================================================================
+# VOLUMES (if needed for future expansion)
+# =============================================================================
+volumes:
+  # ollama-data:  # Can be removed if not used
+  #   driver: local
