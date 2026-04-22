@@ -52,7 +52,7 @@ services:
     image: nickistre/llmster
     build:
       context: .
-      dockerfile: Dockerfile.llmster
+      dockerfile: Dockerfile
       pull: true
     pull_policy: build
 
