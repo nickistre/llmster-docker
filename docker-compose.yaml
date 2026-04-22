@@ -3,12 +3,49 @@
 # =============================================================================
 #
 # Architecture:
+# - caddy:   HTTPS reverse proxy with Cloudflare DNS-01 + Bearer auth
 # - llmster: Headless LM Studio server with AMD GPU support
+#
+# Copy .env.example to .env and fill in values before starting.
 # =============================================================================
 
 name: llmster
 
 services:
+  # ============================================
+  # CADDY - HTTPS reverse proxy
+  # ============================================
+  caddy:
+    image: nickistre/caddy-cloudflare
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
+      pull: true
+    pull_policy: build
+
+    container_name: caddy
+
+    restart: unless-stopped
+
+    ports:
+      - "1243:443"
+
+    networks:
+      llm-net: {}
+
+    env_file: .env
+
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   # ============================================
   # LLMSTER - Headless LM Studio Server
   # ============================================
@@ -107,3 +144,5 @@ networks:
 # =============================================================================
 volumes:
   lmstudio-data:
+  caddy-data:
+  caddy-config:

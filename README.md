@@ -9,9 +9,40 @@ Upstream CLI docs: <https://lmstudio.ai/docs/cli>.
 ## Quick start
 
 ```bash
+cp .env.example .env
+# Edit .env — fill in PROXY_HOST, CLOUDFLARE_API_TOKEN, ACME_EMAIL, LLM_API_KEY
 podman compose up -d
-podman compose logs -f llmster
+podman compose logs -f
 curl http://localhost:1234/v1/models
+```
+
+Two endpoints are available:
+
+| Endpoint | Auth required | Use case |
+|---|---|---|
+| `http://localhost:1234/v1` | No | Local / trusted network access |
+| `https://<PROXY_HOST>:1243/v1` | Bearer token | Remote / external access |
+
+## HTTPS proxy (Caddy)
+
+The `caddy` service terminates TLS and enforces Bearer token auth before
+proxying to `llmster:1234`. It uses Cloudflare DNS-01 to obtain a Let's
+Encrypt certificate, so port 80 never needs to be open.
+
+**Required `.env` values:**
+
+| Variable | Description |
+|---|---|
+| `PROXY_HOST` | Hostname Caddy serves (must be in a Cloudflare-managed zone) |
+| `CLOUDFLARE_API_TOKEN` | Token with Zone:Read + DNS:Edit — create at dash.cloudflare.com/profile/api-tokens |
+| `ACME_EMAIL` | Let's Encrypt account email |
+| `LLM_API_KEY` | Bearer token clients send in `Authorization: Bearer <key>` — generate with `openssl rand -hex 32` |
+
+Clients connect on port `1243` (HTTPS):
+
+```bash
+curl https://<PROXY_HOST>:1243/v1/models \
+  -H "Authorization: Bearer <LLM_API_KEY>"
 ```
 
 ## Managing models with `lms`
