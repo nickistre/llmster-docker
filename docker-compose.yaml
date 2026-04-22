@@ -36,7 +36,6 @@ services:
     env_file: .env
 
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
 
