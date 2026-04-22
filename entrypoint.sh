@@ -3,11 +3,15 @@ set -e
 
 LMS_BIN=/root/.lmstudio/bin/lms
 
-echo "[entrypoint] attempting to refresh LM Studio install..."
-if curl -fsSL --max-time 30 https://lmstudio.ai/install.sh | sh; then
-    echo "[entrypoint] install refresh succeeded"
+if [ "${LM_STUDIO_UPDATE:-0}" = "1" ]; then
+    echo "[entrypoint] attempting to refresh LM Studio install..."
+    if curl -fsSL --max-time 30 https://lmstudio.ai/install.sh | sh; then
+        echo "[entrypoint] install refresh succeeded"
+    else
+        echo "[entrypoint] WARNING: install refresh failed; continuing with existing install" >&2
+    fi
 else
-    echo "[entrypoint] WARNING: install refresh failed; continuing with existing install" >&2
+    echo "[entrypoint] LM_STUDIO_UPDATE=0; skipping install refresh"
 fi
 
 if [ ! -x "$LMS_BIN" ]; then
@@ -15,11 +19,15 @@ if [ ! -x "$LMS_BIN" ]; then
     exit 1
 fi
 
-echo "[entrypoint] attempting to update lms runtimes..."
-if "$LMS_BIN" runtime update; then
-    echo "[entrypoint] runtime update succeeded"
+if [ "${LMS_RUNTIME_UPDATE:-0}" = "1" ]; then
+    echo "[entrypoint] attempting to update lms runtimes..."
+    if "$LMS_BIN" runtime update; then
+        echo "[entrypoint] runtime update succeeded"
+    else
+        echo "[entrypoint] WARNING: runtime update failed; continuing with existing runtimes" >&2
+    fi
 else
-    echo "[entrypoint] WARNING: runtime update failed; continuing with existing runtimes" >&2
+    echo "[entrypoint] LMS_RUNTIME_UPDATE=0; skipping runtime update"
 fi
 
 trap '"$LMS_BIN" server stop; "$LMS_BIN" daemon down' TERM INT
