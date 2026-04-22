@@ -83,7 +83,7 @@ you usually don't need `lms load` manually.
 ```bash
 lms server status        # confirm the server is up
 lms server start|stop    # the entrypoint already runs `start` on boot
-lms log stream           # tail request/response logs
+lms log stream --source server   # tail server logs (entrypoint runs this to keep the container alive)
 ```
 
 ## Use the model via the API

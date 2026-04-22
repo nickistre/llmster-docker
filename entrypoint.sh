@@ -18,5 +18,4 @@ fi
 trap '"$LMS_BIN" server stop; "$LMS_BIN" daemon down' TERM INT
 "$LMS_BIN" daemon up
 "$LMS_BIN" server start
-tail -f /dev/null &
-wait $!
+"$LMS_BIN" log stream --source server
