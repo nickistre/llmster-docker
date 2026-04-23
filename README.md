@@ -37,10 +37,25 @@ automatically at boot without any manual `compose up`.
 ```bash
 sudo quadlet/install.sh
 # On first run, /etc/llmster/llmster.env is created from .env.example.
-# Edit it before starting services — fill in PROXY_HOST, CLOUDFLARE_API_TOKEN,
-# ACME_EMAIL, and LLM_API_KEY.
-sudo systemctl start llmster caddy
+# Edit it now — fill in PROXY_HOST, CLOUDFLARE_API_TOKEN, ACME_EMAIL, and LLM_API_KEY.
+# Adjust LLMSTER_PORT, CADDY_HTTPS_PORT, and JIT_TTL_SECONDS if needed.
+sudo nano /etc/llmster/llmster.env
+
+# Then restart the services to pick up your changes:
+sudo systemctl restart llmster caddy
 ```
+
+After any config change, restart the affected service:
+
+```bash
+sudo systemctl restart llmster   # after changing LLMSTER_PORT, JIT_TTL_SECONDS, etc.
+sudo systemctl restart caddy     # after changing CADDY_HTTPS_PORT, LLM_API_KEY, etc.
+```
+
+> [!NOTE]
+> Changing `LLMSTER_PORT` or `CADDY_HTTPS_PORT` also requires re-running
+> `sudo quadlet/install.sh` to update the `PublishPort=` lines in the generated
+> systemd units, followed by `sudo systemctl daemon-reload` and a service restart.
 
 `install.sh` renders the `.in` templates to `/etc/containers/systemd/`, copies
 the build context (Dockerfiles, entrypoint, Caddyfile) to `/usr/local/share/llmster/build/`,

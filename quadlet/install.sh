@@ -85,3 +85,8 @@ sudo systemctl start llmster-build.service caddy-build.service
 sudo systemctl start llmster.service caddy.service
 
 echo "Done. Status: systemctl status llmster caddy"
+echo ""
+echo "If you edited $confdir/llmster.env after install, restart the affected services:"
+echo "  sudo systemctl restart llmster   # after LLMSTER_PORT, JIT_TTL_SECONDS, etc."
+echo "  sudo systemctl restart caddy     # after CADDY_HTTPS_PORT, LLM_API_KEY, etc."
+echo "Note: port changes also require re-running this script to update PublishPort in the Quadlet units."
