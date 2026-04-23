@@ -8,9 +8,10 @@ This project deploys LM Studio in headless server mode ("llmster") inside a cont
 
 ## Common Commands
 
+### Ad-hoc (docker compose)
 ```bash
 # Build the container image
-podman build -f Dockerfile.llmster -t llmster .
+podman build -f Dockerfile -t llmster .
 
 # Start the stack (detached)
 podman compose up -d
@@ -29,6 +30,40 @@ podman compose up -d --build
 # Check health / API
 curl http://localhost:1234/v1/models
 ```
+
+### Systemd via Quadlet (production)
+```bash
+# Install / update Quadlet units and start services (run once, then after changes)
+# Edit /etc/llmster/llmster.env (created on first run) before starting services.
+sudo quadlet/install.sh
+
+# View logs
+journalctl -u llmster -f
+journalctl -u caddy -f
+
+# Start / stop / restart individual services
+sudo systemctl start llmster
+sudo systemctl stop llmster
+sudo systemctl restart llmster
+
+# Check service status
+systemctl status llmster caddy
+
+# Uninstall (preserves /etc/llmster/llmster.env and Podman volumes)
+sudo llmster-uninstall
+
+# Uninstall and remove all data including downloaded models
+sudo llmster-uninstall --purge
+```
+
+**Installed paths:**
+| Path | Contents |
+|---|---|
+| `/etc/llmster/llmster.env` | Runtime config (edit this) |
+| `/etc/llmster/llmster.env.example` | Reference / upgrade diff |
+| `/usr/local/share/llmster/build/` | Build context (Dockerfiles, entrypoint, Caddyfile) |
+| `/etc/containers/systemd/` | Generated Quadlet units |
+| `/usr/local/bin/llmster-uninstall` | Uninstaller |
 
 ## Architecture
 

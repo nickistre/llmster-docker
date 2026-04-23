@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# llmster-uninstall — remove llmster Quadlet units, build context, and scripts.
+#
+# Paths are baked in at install time; override via env to match a custom install.
+# By default, /etc/llmster/llmster.env and all Podman volumes are preserved.
+# Pass --purge to also stop services, delete the env file, and remove volumes.
+set -euo pipefail
+
+: "${SYSCONFDIR:=@SYSCONFDIR@}"
+: "${DATADIR:=@DATADIR@}"
+: "${QUADLETDIR:=@QUADLETDIR@}"
+: "${BINDIR:=@BINDIR@}"
+
+PURGE=0
+for arg in "$@"; do
+    [ "$arg" = "--purge" ] && PURGE=1
+done
+
+UNITS=(
+    llm-net.network
+    lmstudio-data.volume
+    caddy-data.volume
+    caddy-config.volume
+    llmster.build
+    caddy.build
+    llmster.container
+    caddy.container
+)
+VOLUMES=(lmstudio-data caddy-data caddy-config)
+
+# ── Stop services ─────────────────────────────────────────────────────────────
+for svc in llmster caddy; do
+    if systemctl is-active --quiet "${svc}.service" 2>/dev/null; then
+        sudo systemctl stop "${svc}.service"
+    fi
+done
+
+# ── Remove Quadlet units ───────────────────────────────────────────────────────
+for unit in "${UNITS[@]}"; do
+    sudo rm -f "${QUADLETDIR}/${unit}"
+done
+sudo systemctl daemon-reload
+
+# ── Remove build context ──────────────────────────────────────────────────────
+sudo rm -rf "${DATADIR}/build"
+rmdir --ignore-fail-on-non-empty "${DATADIR}" 2>/dev/null || true
+
+# ── Remove this script from BINDIR ────────────────────────────────────────────
+sudo rm -f "${BINDIR}/llmster-uninstall"
+
+if [ "$PURGE" -eq 1 ]; then
+    # Remove config
+    sudo rm -f "${SYSCONFDIR}/llmster/llmster.env" "${SYSCONFDIR}/llmster/llmster.env.example"
+    rmdir --ignore-fail-on-non-empty "${SYSCONFDIR}/llmster" 2>/dev/null || true
+
+    # Remove Podman volumes (destroys all downloaded models)
+    for vol in "${VOLUMES[@]}"; do
+        if podman volume exists "${vol}" 2>/dev/null; then
+            sudo podman volume rm "${vol}"
+        fi
+    done
+    echo "Purged. All config and volume data removed."
+else
+    echo "Uninstalled. Config and volumes preserved."
+    echo "To remove everything including models: llmster-uninstall --purge"
+fi

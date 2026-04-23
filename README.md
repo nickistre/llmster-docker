@@ -6,7 +6,7 @@ OpenAI-compatible API on `http://localhost:1234`.
 See `CLAUDE.md` for architecture and environment-variable reference.
 Upstream CLI docs: <https://lmstudio.ai/docs/cli>.
 
-## Quick start
+## Quick start (ad-hoc / dev)
 
 ```bash
 cp .env.example .env
@@ -14,6 +14,71 @@ cp .env.example .env
 podman compose up -d
 podman compose logs -f
 curl http://localhost:1234/v1/models
+```
+
+## Run under systemd (Quadlet — recommended for production)
+
+Quadlet units in `quadlet/` let systemd manage the containers so they start
+automatically at boot without any manual `compose up`.
+
+**One-time setup:**
+
+> [!NOTE]
+> The build steps pull base images from Docker Hub. Unauthenticated pulls are
+> rate-limited and may fail on a cold system if the limit is reached. To avoid
+> this, [create a free Docker Hub account](https://hub.docker.com/signup) and
+> log in before running the installer:
+> ```bash
+> sudo podman login docker.io
+> ```
+> See the [Podman login docs](https://docs.podman.io/en/latest/markdown/podman-login.1.html)
+> for details.
+
+```bash
+sudo quadlet/install.sh
+# On first run, /etc/llmster/llmster.env is created from .env.example.
+# Edit it before starting services — fill in PROXY_HOST, CLOUDFLARE_API_TOKEN,
+# ACME_EMAIL, and LLM_API_KEY.
+sudo systemctl start llmster caddy
+```
+
+`install.sh` renders the `.in` templates to `/etc/containers/systemd/`, copies
+the build context (Dockerfiles, entrypoint, Caddyfile) to `/usr/local/share/llmster/build/`,
+installs `llmster-uninstall` to `/usr/local/bin/`, and reloads systemd's generator.
+After that, services come up on every boot automatically.
+
+**Installed paths:**
+
+| Path | Contents |
+|---|---|
+| `/etc/llmster/llmster.env` | Runtime config — edit this |
+| `/etc/llmster/llmster.env.example` | Reference; updated on each `install.sh` run |
+| `/usr/local/share/llmster/build/` | Build context for Quadlet `.build` units |
+| `/etc/containers/systemd/` | Generated Quadlet units |
+| `/usr/local/bin/llmster-uninstall` | Uninstaller |
+
+**Day-to-day commands:**
+
+```bash
+systemctl status llmster caddy          # check service state
+journalctl -u llmster -f                # live llmster logs
+sudo systemctl restart llmster          # restart after config changes
+```
+
+**Re-run `quadlet/install.sh` any time you update the repo** — it is idempotent.
+
+**Uninstall** (config and volumes are preserved by default):
+
+```bash
+sudo llmster-uninstall             # remove units + build context
+sudo llmster-uninstall --purge     # also remove config and all Podman volumes (destroys models)
+```
+
+**Custom install prefix** (for packaging or non-standard layouts):
+
+```bash
+SYSCONFDIR=/etc DATADIR=/usr/local/share/llmster QUADLETDIR=/etc/containers/systemd BINDIR=/usr/local/bin \
+  sudo -E quadlet/install.sh
 ```
 
 Two endpoints are available:

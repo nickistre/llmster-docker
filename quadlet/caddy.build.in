@@ -1,0 +1,5 @@
+[Build]
+ImageTag=localhost/caddy-cloudflare:latest
+File=Dockerfile.caddy
+SetWorkingDirectory=@DATADIR@/build
+Pull=newer

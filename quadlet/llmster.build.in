@@ -1,0 +1,5 @@
+[Build]
+ImageTag=localhost/llmster:latest
+File=Dockerfile
+SetWorkingDirectory=@DATADIR@/build
+Pull=newer
