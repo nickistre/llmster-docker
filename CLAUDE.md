@@ -73,7 +73,8 @@ sudo llmster-uninstall --purge
 - If the startup install fails (network unavailable), the entrypoint logs a warning and continues with the baked-in install — the server still starts
 - Adds Mesa Vulkan drivers (`mesa-vulkan-drivers`) for AMD GPU access
 - Traps SIGTERM/SIGINT for clean daemon/server shutdown
-- Health check hits `GET /v1/models` on port 1234
+- Health check hits `GET /v1/models` on `$LLMSTER_PORT` (default 1234)
+- At startup, `entrypoint.sh` patches `~/.lmstudio/settings.json` with `jq` to force JIT loading on and apply `$JIT_TTL_SECONDS`. LM Studio has no env-var or CLI interface for these settings; patching the JSON is the only way to configure them headlessly.
 
 **GPU access** requires host device passthrough:
 - `/dev/dri` — DRM/KMS (Mesa/Vulkan rendering)
@@ -82,16 +83,19 @@ sudo llmster-uninstall --purge
 
 **Persistent storage**: the named volume `lmstudio-data` is mounted at `/root/.lmstudio`, covering binaries, runtime, config, and models. A fresh volume is seeded from the image's baked-in install on first run. Models survive `podman compose down` but are wiped by `podman compose down -v`.
 
-**Key environment variables** (set in both Dockerfile defaults and compose overrides):
+**Key environment variables** (set in `.env.example` / compose / Quadlet env file):
 | Variable | Purpose |
 |---|---|
-| `LLMSTER_PORT` | API listen port (default 1234) |
+| `LLMSTER_PORT` | API listen port, passed via `--port` to `lms server start` (default 1234) |
+| `CADDY_HTTPS_PORT` | Host port Caddy binds for HTTPS (default 1243) |
+| `JIT_TTL_SECONDS` | Seconds an idle JIT-loaded model stays in memory (default 3600); written to `settings.json` at startup |
 | `LMS_SERVER_HOST` | Bind address (set to `0.0.0.0` for container access) |
 | `OLLAMA_ORIGINS` | CORS origins (`*` allows AnythingLLM to connect) |
-| `JIT_LOADING` | Load model on first request instead of startup |
-| `AUTO_UNLOAD` | Unload model after idle |
-| `UNLOAD_IDLE_TIME` | Seconds before auto-unload (default 300) |
 | `LIBVA_DRIVER_NAME` | VA-API driver (`radeonsi` for AMD) |
+| `LM_STUDIO_UPDATE` | Set to `1` to re-download LM Studio on every start |
+| `LMS_RUNTIME_UPDATE` | Set to `1` to run `lms runtime update` on every start |
+
+**Quadlet port changes** require re-running `sudo quadlet/install.sh` — Quadlet `PublishPort=` is resolved at install time from the env file, not at container runtime.
 
 **Network**: compose stack uses `llm-net` bridge network; AnythingLLM (or other clients) should join this network and connect to `llmster:1234`.
 

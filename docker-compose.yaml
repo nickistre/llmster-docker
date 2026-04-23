@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
 
     ports:
-      - "1243:443"
+      - "${CADDY_HTTPS_PORT:-1243}:443"
 
     networks:
       llm-net: {}
@@ -64,7 +64,7 @@ services:
     # PORT EXPOSURE - Access from host
     # ========================================================================
     ports:
-      - "1234:1234" # LLMster API port
+      - "${LLMSTER_PORT:-1234}:${LLMSTER_PORT:-1234}"
 
     # ========================================================================
     # NETWORK CONFIGURATION - Name Resolution (No Static IPs)
@@ -88,10 +88,8 @@ services:
       - LIBVA_DRIVER_NAME=radeonsi
 
       # LLMster Configuration
-      - LLMSTER_PORT=1234
-      - JIT_LOADING=true
-      - AUTO_UNLOAD=true
-      - UNLOAD_IDLE_TIME=300
+      - LLMSTER_PORT=${LLMSTER_PORT:-1234}
+      - JIT_TTL_SECONDS=${JIT_TTL_SECONDS:-3600}
 
       - OLLAMA_ORIGINS=*
       - LMS_SERVER_HOST=0.0.0.0

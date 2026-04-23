@@ -112,14 +112,34 @@ curl https://<PROXY_HOST>:1243/v1/models \
 
 ## Managing models with `lms`
 
-The `lms` CLI lives inside the container at `/root/.lmstudio/bin/lms`. Models
-and config are stored on the `lmstudio-data` named volume, so downloads
-persist across `podman compose down` / `up` (but not `down -v`).
+The `lms` CLI lives inside the container. Models and config are stored on the
+`lmstudio-data` named volume, so downloads persist across `podman compose down`
+/ `up` (but not `down -v`).
 
-Open a shell in the running container for any of the commands below:
+Run `lms` commands directly via `podman exec`. Under Quadlet (systemd), prefix
+with `sudo` since the containers run as root:
 
 ```bash
-podman compose exec -it llmster bash
+# Compose
+podman exec llmster lms <command>
+
+# Quadlet / systemd
+sudo podman exec llmster lms <command>
+```
+
+For an interactive shell if you need it:
+
+```bash
+podman exec -it llmster bash       # compose
+sudo podman exec -it llmster bash  # Quadlet / systemd
+```
+
+### Login — `lms login`
+
+Authenticate with your LM Studio account (required for some catalog features):
+
+```bash
+podman exec llmster lms login
 ```
 
 ### Download a model — `lms get`
@@ -133,13 +153,13 @@ fail with `Failed to resolve artifact ...` for most community repos. Append
 
 ```bash
 # Full HF URL + pinned Q8_0 quant (this is the form that works for community repos):
-lms get https://huggingface.co/Jackrong/Qwen3.5-9B-Claude-4.6-Opus-Reasoning-Distilled-v2-GGUF@q8_0
+podman exec llmster lms get https://huggingface.co/Jackrong/Qwen3.5-9B-Claude-4.6-Opus-Reasoning-Distilled-v2-GGUF@q8_0
 
 # HF URL without a quant — lms prompts you to pick one:
-lms get https://huggingface.co/Jackrong/Qwen3.5-9B-Claude-4.6-Opus-Reasoning-Distilled-v2-GGUF
+podman exec llmster lms get https://huggingface.co/Jackrong/Qwen3.5-9B-Claude-4.6-Opus-Reasoning-Distilled-v2-GGUF
 
 # Curated catalog (staff picks) accepts the short slug:
-lms get llama-3.1-8b@q4_k_m
+podman exec llmster lms get llama-3.1-8b@q4_k_m
 ```
 
 `lms get` always asks for confirmation before writing to disk:
@@ -163,31 +183,31 @@ Useful flags:
 ### List, load, unload, remove
 
 ```bash
-lms ls                   # models on disk
-lms ps                   # models currently loaded in memory
-lms load <key>           # load (supports --gpu=max|auto|0.0-1.0, --context-length=N, --identifier <name>)
-lms unload <key>         # unload; --all to unload everything
-lms rm <key>             # delete from disk
+podman exec llmster lms ls                   # models on disk
+podman exec llmster lms ps                   # models currently loaded in memory
+podman exec llmster lms load <key>           # load (supports --gpu=max|auto|0.0-1.0, --context-length=N, --identifier <name>)
+podman exec llmster lms unload <key>         # unload; --all to unload everything
+podman exec llmster lms rm <key>             # delete from disk
 ```
 
-With `JIT_LOADING=true` (the compose default) the first API request
-auto-loads the model; `AUTO_UNLOAD` + `UNLOAD_IDLE_TIME` handle eviction, so
-you usually don't need `lms load` manually.
+JIT loading is always enabled — the first API request auto-loads the model.
+`JIT_TTL_SECONDS` (default 3600) controls how long an idle model stays in
+memory before being evicted.
 
 ### Server + logs
 
 ```bash
-lms server status        # confirm the server is up
-lms server start|stop    # the entrypoint already runs `start` on boot
-lms log stream --source server   # tail server logs (entrypoint runs this to keep the container alive)
+podman exec llmster lms server status                    # confirm the server is up
+podman exec llmster lms server start|stop               # the entrypoint already runs `start` on boot
+podman exec llmster lms log stream --source server      # tail server logs (the entrypoint runs this to keep the container alive)
 ```
 
 ## Use the model via the API
 
 ```bash
-curl http://localhost:1234/v1/models      # find the model id lms registered
+curl http://localhost:${LLMSTER_PORT:-1234}/v1/models      # find the model id lms registered
 
-curl http://localhost:1234/v1/chat/completions \
+curl http://localhost:${LLMSTER_PORT:-1234}/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{
     "model": "<id from /v1/models>",
@@ -197,4 +217,4 @@ curl http://localhost:1234/v1/chat/completions \
 
 Any OpenAI-compatible client works — point it at `http://llmster:1234/v1`
 (from inside the `llm-net` network) or `http://localhost:1234/v1` (from the
-host).
+host, using the default port).

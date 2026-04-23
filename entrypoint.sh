@@ -19,6 +19,16 @@ if [ ! -x "$LMS_BIN" ]; then
     exit 1
 fi
 
+SETTINGS=/root/.lmstudio/settings.json
+mkdir -p "$(dirname "$SETTINGS")"
+[ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
+tmp="$(mktemp)"
+jq --argjson ttl "${JIT_TTL_SECONDS:-3600}" '
+  .developer.jitModelTTL = { enabled: true, ttlSeconds: $ttl } |
+  .developer.unloadPreviousJITModelOnLoad = true
+' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+echo "[entrypoint] settings.json: jitModelTTL.ttlSeconds=${JIT_TTL_SECONDS:-3600}, JIT+unload forced on"
+
 if [ "${LMS_RUNTIME_UPDATE:-0}" = "1" ]; then
     echo "[entrypoint] attempting to update lms runtimes..."
     if "$LMS_BIN" runtime update; then
@@ -32,5 +42,5 @@ fi
 
 trap '"$LMS_BIN" server stop; "$LMS_BIN" daemon down' TERM INT
 "$LMS_BIN" daemon up
-"$LMS_BIN" server start
+"$LMS_BIN" server start --port "${LLMSTER_PORT:-1234}"
 "$LMS_BIN" log stream --source server

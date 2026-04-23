@@ -9,7 +9,7 @@ Image=caddy.build
 Network=llm-net.network
 Volume=caddy-data.volume:/data
 Volume=caddy-config.volume:/config
-PublishPort=1243:443
+PublishPort=@CADDY_HTTPS_PORT@:443
 
 EnvironmentFile=@SYSCONFDIR@/llmster/llmster.env
 

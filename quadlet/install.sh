@@ -19,6 +19,14 @@ REPO="$(cd "$SRC/.." && pwd)"
 confdir="${SYSCONFDIR}/llmster"
 buildctx="${DATADIR}/build"
 
+# Read port defaults from the installed env file (first install: fall back to .env.example).
+_envfile="${confdir}/llmster.env"
+[ -f "$_envfile" ] || _envfile="${REPO}/.env.example"
+LLMSTER_PORT="$(grep -m1 '^LLMSTER_PORT=' "$_envfile" | cut -d= -f2)"
+CADDY_HTTPS_PORT="$(grep -m1 '^CADDY_HTTPS_PORT=' "$_envfile" | cut -d= -f2)"
+: "${LLMSTER_PORT:=1234}"
+: "${CADDY_HTTPS_PORT:=1243}"
+
 # ── Directories ──────────────────────────────────────────────────────────────
 sudo install -d "$confdir" "$buildctx" "$QUADLETDIR" "$BINDIR"
 
@@ -47,6 +55,8 @@ for tmpl in "$SRC"/*.in; do
     sudo sh -c "sed \
         -e 's|@SYSCONFDIR@|${SYSCONFDIR}|g' \
         -e 's|@DATADIR@|${DATADIR}|g' \
+        -e 's|@LLMSTER_PORT@|${LLMSTER_PORT}|g' \
+        -e 's|@CADDY_HTTPS_PORT@|${CADDY_HTTPS_PORT}|g' \
         '${tmpl}' > '${QUADLETDIR}/${name}'"
     sudo chmod 0644 "${QUADLETDIR}/${name}"
 done

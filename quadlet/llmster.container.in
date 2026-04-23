@@ -8,7 +8,7 @@ ContainerName=llmster
 Image=llmster.build
 Network=llm-net.network
 Volume=lmstudio-data.volume:/root/.lmstudio
-PublishPort=1234:1234
+PublishPort=@LLMSTER_PORT@:@LLMSTER_PORT@
 
 AddDevice=/dev/dri
 AddDevice=/dev/kfd
@@ -16,10 +16,6 @@ AddDevice=/dev/fuse
 
 EnvironmentFile=@SYSCONFDIR@/llmster/llmster.env
 Environment=LIBVA_DRIVER_NAME=radeonsi
-Environment=LLMSTER_PORT=1234
-Environment=JIT_LOADING=true
-Environment=AUTO_UNLOAD=true
-Environment=UNLOAD_IDLE_TIME=300
 Environment=OLLAMA_ORIGINS=*
 Environment=LMS_SERVER_HOST=0.0.0.0
 

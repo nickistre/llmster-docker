@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
     tzdata \
+    jq \
     libatomic1 \
     libgomp1 \
     libc6 \
@@ -58,12 +59,7 @@ ENV LIBVA_DRIVER_NAME=radeonsi \
 # LLMster Configuration
 # =============================================================================
 
-# Enable JIT loading and auto-unload by default
 ENV PATH=/root/.lmstudio/bin:$PATH \
-    JIT_LOADING=true \
-    AUTO_UNLOAD=true \
-    UNLOAD_IDLE_TIME=300 \
-    LLMSTER_PORT=1234 \
     LM_STUDIO_UPDATE=0 \
     LMS_RUNTIME_UPDATE=0
 
@@ -77,7 +73,7 @@ ENV OLLAMA_ORIGINS=* \
 
 # Create health check script
 RUN echo '#!/bin/sh' > /healthcheck.sh && \
-    echo 'curl -f http://localhost:1234/v1/models || exit 1' >> /healthcheck.sh && \
+    echo 'curl -f "http://localhost:${LLMSTER_PORT:-1234}/v1/models" || exit 1' >> /healthcheck.sh && \
     chmod +x /healthcheck.sh
 
 # =============================================================================

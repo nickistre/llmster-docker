@@ -10,5 +10,5 @@
     @unauthorized not header Authorization "Bearer {$LLM_API_KEY}"
     respond @unauthorized "Unauthorized" 401
 
-    reverse_proxy llmster:1234
+    reverse_proxy llmster:{$LLMSTER_PORT:1234}
 }
