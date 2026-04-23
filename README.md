@@ -6,6 +6,30 @@ OpenAI-compatible API on `http://localhost:1234`.
 See `CLAUDE.md` for architecture and environment-variable reference.
 Upstream CLI docs: <https://lmstudio.ai/docs/cli>.
 
+> [!WARNING]
+> **Consumer GPU thermal risk.** LLM inference sustains ~100% GPU load indefinitely.
+> Consumer gaming coolers are designed for bursty workloads, not sustained load, and
+> can reach thermal limits within minutes — causing throttling or an emergency shutdown.
+>
+> Before running long inference sessions, consider capping GPU power via the sysfs
+> interface or `rocm-smi`:
+>
+> ```bash
+> # Find your hwmon path
+> ls /sys/class/drm/card0/device/hwmon/
+>
+> # Read current and max cap (in microwatts)
+> cat /sys/class/drm/card0/device/hwmon/hwmon*/power1_cap
+> cat /sys/class/drm/card0/device/hwmon/hwmon*/power1_cap_max
+>
+> # Set a lower cap (e.g. 200 W = 200000000 µW) — requires root
+> echo 200000000 | sudo tee /sys/class/drm/card0/device/hwmon/hwmon*/power1_cap
+> ```
+>
+> See the [Arch Wiki — AMDGPU power management](https://wiki.archlinux.org/title/AMDGPU#Power_management)
+> and [Linux kernel AMDGPU thermal docs](https://docs.kernel.org/gpu/amdgpu/thermal.html)
+> for details and alternative approaches (fan curves, `rocm-smi`, `coretemp` monitoring).
+
 ## Quick start (ad-hoc / dev)
 
 ```bash
