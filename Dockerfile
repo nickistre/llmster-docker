@@ -7,7 +7,7 @@
 FROM docker.io/library/debian:trixie-slim
 
 # Labels for documentation
-LABEL maintainer="Project Team" \
+LABEL maintainer="nickistre" \
       description="Headless LM Studio server container with AMD GPU support" \
       version="1.0.0"
 
