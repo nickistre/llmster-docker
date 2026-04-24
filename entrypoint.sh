@@ -22,7 +22,7 @@ fi
 SETTINGS=/root/.lmstudio/settings.json
 mkdir -p "$(dirname "$SETTINGS")"
 [ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
-tmp="$(mktemp)"
+tmp="$(mktemp -p "$(dirname "$SETTINGS")")"
 jq --argjson ttl "${JIT_TTL_SECONDS:-3600}" '
   .developer.jitModelTTL = { enabled: true, ttlSeconds: $ttl } |
   .developer.unloadPreviousJITModelOnLoad = true
