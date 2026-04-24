@@ -73,7 +73,7 @@ RUN if [ "$INSTALL_ROCM" = "1" ]; then \
       printf 'APT::Key::GPGVCommand "/usr/bin/gpgv";\n' \
         > /etc/apt/apt.conf.d/99gpgv-compat && \
       apt-get update && apt-get install -y --no-install-recommends \
-        rocm-hip-libraries && \
+        hipblas rocblas && \
       apt-get clean && rm -rf /var/lib/apt/lists/* ; \
     fi
 
