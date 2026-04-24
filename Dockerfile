@@ -62,7 +62,7 @@ ARG ROCM_VERSION=6.4
 
 RUN if [ "$INSTALL_ROCM" = "1" ]; then \
       apt-get update && apt-get install -y --no-install-recommends \
-        wget gnupg ca-certificates && \
+        wget gpg gpgv ca-certificates && \
       mkdir -p /etc/apt/keyrings && \
       wget -qO- https://repo.radeon.com/rocm/rocm.gpg.key \
         | gpg --dearmor > /etc/apt/keyrings/rocm.gpg && \
@@ -70,6 +70,8 @@ RUN if [ "$INSTALL_ROCM" = "1" ]; then \
         > /etc/apt/sources.list.d/rocm.list && \
       printf 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600\n' \
         > /etc/apt/preferences.d/rocm-pin-600 && \
+      printf 'APT::Key::GPGVCommand "/usr/bin/gpgv";\n' \
+        > /etc/apt/apt.conf.d/99gpgv-compat && \
       apt-get update && apt-get install -y --no-install-recommends \
         rocm-hip-libraries && \
       apt-get clean && rm -rf /var/lib/apt/lists/* ; \
