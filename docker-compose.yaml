@@ -54,6 +54,9 @@ services:
       context: .
       dockerfile: Dockerfile
       pull: true
+      args:
+        INSTALL_ROCM: ${INSTALL_ROCM:-1}
+        ROCM_VERSION: ${ROCM_VERSION:-6.4}
     pull_policy: build
 
     container_name: llmster
@@ -79,6 +82,10 @@ services:
       - /dev/dri:/dev/dri
       - /dev/kfd:/dev/kfd
       - /dev/fuse:/dev/fuse
+
+    group_add:
+      - video
+      - render
 
     # ========================================================================
     # ENVIRONMENT CONFIGURATION

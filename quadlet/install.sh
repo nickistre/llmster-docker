@@ -24,8 +24,12 @@ _envfile="${confdir}/llmster.env"
 [ -f "$_envfile" ] || _envfile="${REPO}/.env.example"
 LLMSTER_PORT="$(grep -m1 '^LLMSTER_PORT=' "$_envfile" | cut -d= -f2)"
 CADDY_HTTPS_PORT="$(grep -m1 '^CADDY_HTTPS_PORT=' "$_envfile" | cut -d= -f2)"
+INSTALL_ROCM="$(grep -m1 '^INSTALL_ROCM=' "$_envfile" | cut -d= -f2)"
+ROCM_VERSION="$(grep -m1 '^ROCM_VERSION=' "$_envfile" | cut -d= -f2)"
 : "${LLMSTER_PORT:=1234}"
 : "${CADDY_HTTPS_PORT:=1243}"
+: "${INSTALL_ROCM:=1}"
+: "${ROCM_VERSION:=6.4}"
 
 # ── Directories ──────────────────────────────────────────────────────────────
 sudo install -d "$confdir" "$buildctx" "$QUADLETDIR" "$BINDIR"
@@ -57,6 +61,8 @@ for tmpl in "$SRC"/*.in; do
         -e 's|@DATADIR@|${DATADIR}|g' \
         -e 's|@LLMSTER_PORT@|${LLMSTER_PORT}|g' \
         -e 's|@CADDY_HTTPS_PORT@|${CADDY_HTTPS_PORT}|g' \
+        -e 's|@INSTALL_ROCM@|${INSTALL_ROCM}|g' \
+        -e 's|@ROCM_VERSION@|${ROCM_VERSION}|g' \
         '${tmpl}' > '${QUADLETDIR}/${name}'"
     sudo chmod 0644 "${QUADLETDIR}/${name}"
 done

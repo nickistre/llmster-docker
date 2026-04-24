@@ -42,10 +42,10 @@ RUN mkdir -p \
     ~/.cache/llmster
 
 # =============================================================================
-# GPU Support Configuration (AMD/Vulcan)
+# GPU Support Configuration (AMD Vulkan + ROCm)
 # =============================================================================
 
-# Install Mesa drivers for AMD GPU support
+# Install Mesa drivers for AMD GPU Vulkan support
 RUN apt-get update && apt-get install -y --no-install-recommends \
     mesa-vulkan-drivers \
     && apt-get clean \
@@ -54,6 +54,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set Vulkan driver
 ENV LIBVA_DRIVER_NAME=radeonsi \
     VULKAN_ICD=/usr/share/vulkan/icd.d/radeon_icd.x86_64.json
+
+# Install ROCm runtime libraries (for LM Studio's ROCm backend).
+# Set INSTALL_ROCM=0 at build time to skip and save ~2-3 GB image size.
+ARG INSTALL_ROCM=1
+ARG ROCM_VERSION=6.4
+
+RUN if [ "$INSTALL_ROCM" = "1" ]; then \
+      apt-get update && apt-get install -y --no-install-recommends \
+        wget gnupg ca-certificates && \
+      mkdir -p /etc/apt/keyrings && \
+      wget -qO- https://repo.radeon.com/rocm/rocm.gpg.key \
+        | gpg --dearmor > /etc/apt/keyrings/rocm.gpg && \
+      echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/${ROCM_VERSION} noble main" \
+        > /etc/apt/sources.list.d/rocm.list && \
+      printf 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600\n' \
+        > /etc/apt/preferences.d/rocm-pin-600 && \
+      apt-get update && apt-get install -y --no-install-recommends \
+        rocm-hip-libraries && \
+      apt-get clean && rm -rf /var/lib/apt/lists/* ; \
+    fi
+
+ENV LD_LIBRARY_PATH=/opt/rocm/lib
 
 # =============================================================================
 # LLMster Configuration

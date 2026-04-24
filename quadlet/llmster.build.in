@@ -3,3 +3,5 @@ ImageTag=localhost/llmster:latest
 File=Dockerfile
 SetWorkingDirectory=@DATADIR@/build
 Pull=newer
+BuildArg=INSTALL_ROCM=@INSTALL_ROCM@
+BuildArg=ROCM_VERSION=@ROCM_VERSION@

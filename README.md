@@ -6,6 +6,27 @@ OpenAI-compatible API on `http://localhost:1234`.
 See `CLAUDE.md` for architecture and environment-variable reference.
 Upstream CLI docs: <https://lmstudio.ai/docs/cli>.
 
+> [!NOTE]
+> **AMD GPU backend (Vulkan vs ROCm).** The image ships both backends:
+>
+> - **Vulkan** — always available; Mesa drivers are installed unconditionally.
+> - **ROCm** — installed by default from AMD's official apt repo (adds ~2–3 GB to
+>   the image). Set `INSTALL_ROCM=0` in `.env` (or `.env.example`) before
+>   building to skip it and keep image size smaller.
+>
+> To switch LM Studio to the ROCm backend:
+> ```bash
+> podman exec llmster lms runtime ls          # find the amd-rocm-avx2 entry
+> podman exec llmster lms runtime select <id> # select it
+> ```
+> or choose it in the LM Studio desktop app settings before connecting.
+>
+> If a model fails to load with `libhipblas.so.2: cannot open shared object file`,
+> the image was built with `INSTALL_ROCM=0` — rebuild with the default `INSTALL_ROCM=1`.
+>
+> To bump the ROCm version used: set `ROCM_VERSION=<version>` in `.env` and
+> rebuild. Defaults to `6.4`.
+
 > [!WARNING]
 > **Consumer GPU thermal risk.** LLM inference sustains ~100% GPU load indefinitely.
 > Consumer gaming coolers are designed for bursty workloads, not sustained load, and
