@@ -15,12 +15,12 @@ Upstream CLI docs: <https://lmstudio.ai/docs/cli>.
 > interface or `rocm-smi`:
 >
 > ```bash
-> # Find your hwmon path
-> ls /sys/class/drm/card0/device/hwmon/
+> # Find your hwmon path(s)
+> ls /sys/class/drm/card*/device/hwmon/
 >
-> # Read current and max cap (in microwatts)
-> cat /sys/class/drm/card0/device/hwmon/hwmon*/power1_cap
-> cat /sys/class/drm/card0/device/hwmon/hwmon*/power1_cap_max
+> # Read current and max cap (in microwatts) — prints full path alongside each value
+> grep -H . /sys/class/drm/card*/device/hwmon/hwmon*/power1_cap
+> grep -H . /sys/class/drm/card*/device/hwmon/hwmon*/power1_cap_max
 >
 > # Set a lower cap (e.g. 200 W = 200000000 µW) — requires root
 > echo 200000000 | sudo tee /sys/class/drm/card0/device/hwmon/hwmon*/power1_cap
