@@ -14,9 +14,6 @@ AddDevice=/dev/dri
 AddDevice=/dev/kfd
 AddDevice=/dev/fuse
 
-GroupAdd=video
-GroupAdd=render
-
 EnvironmentFile=@SYSCONFDIR@/llmster/llmster.env
 Environment=LIBVA_DRIVER_NAME=radeonsi
 Environment=OLLAMA_ORIGINS=*
