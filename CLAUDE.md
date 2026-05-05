@@ -89,6 +89,7 @@ sudo llmster-uninstall --purge
 | `LLMSTER_PORT` | API listen port, passed via `--port` to `lms server start` (default 1234) |
 | `CADDY_HTTPS_PORT` | Host port Caddy binds for HTTPS (default 1243) |
 | `JIT_TTL_SECONDS` | Seconds an idle JIT-loaded model stays in memory (default 3600); written to `settings.json` at startup |
+| `UNLOAD_PREVIOUS_MODEL` | Whether to unload the previous JIT model when a new one loads (default `false`); written to `settings.json` at startup |
 | `LMS_SERVER_HOST` | Bind address (set to `0.0.0.0` for container access) |
 | `OLLAMA_ORIGINS` | CORS origins (`*` allows AnythingLLM to connect) |
 | `LIBVA_DRIVER_NAME` | VA-API driver (`radeonsi` for AMD) |

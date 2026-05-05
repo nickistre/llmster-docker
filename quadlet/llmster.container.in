@@ -1,13 +1,14 @@
 [Unit]
 Description=LM Studio headless server (llmster)
-Wants=network-online.target llm-net-network.service
-After=network-online.target llm-net-network.service llmster-build.service
+Wants=network-online.target llm-net-network.service rocm-cache-volume.service
+After=network-online.target llm-net-network.service llmster-build.service rocm-cache-volume.service
 
 [Container]
 ContainerName=llmster
 Image=llmster.build
 Network=llm-net.network
 Volume=lmstudio-data.volume:/root/.lmstudio
+Volume=rocm-cache.volume:/root/.cache
 PublishPort=@LLMSTER_PORT@:@LLMSTER_PORT@
 
 AddDevice=/dev/dri

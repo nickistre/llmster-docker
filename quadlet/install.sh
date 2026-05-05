@@ -81,7 +81,7 @@ sudo systemctl daemon-reload
 
 # Start in dependency order so each layer is ready before the next.
 # 1. Network and volumes
-sudo systemctl start llm-net-network.service lmstudio-data-volume.service caddy-data-volume.service caddy-config-volume.service
+sudo systemctl start llm-net-network.service lmstudio-data-volume.service rocm-cache-volume.service caddy-data-volume.service caddy-config-volume.service
 
 # 2. Build images (may take several minutes on first run)
 echo "Building container images (this may take a few minutes on first run)…"

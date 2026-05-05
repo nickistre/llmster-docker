@@ -23,11 +23,11 @@ SETTINGS=/root/.lmstudio/settings.json
 mkdir -p "$(dirname "$SETTINGS")"
 [ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
 tmp="$(mktemp -p "$(dirname "$SETTINGS")")"
-jq --argjson ttl "${JIT_TTL_SECONDS:-3600}" '
+jq --argjson ttl "${JIT_TTL_SECONDS:-3600}" --argjson unload "${UNLOAD_PREVIOUS_MODEL:-false}" '
   .developer.jitModelTTL = { enabled: true, ttlSeconds: $ttl } |
-  .developer.unloadPreviousJITModelOnLoad = true
+  .developer.unloadPreviousJITModelOnLoad = $unload
 ' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
-echo "[entrypoint] settings.json: jitModelTTL.ttlSeconds=${JIT_TTL_SECONDS:-3600}, JIT+unload forced on"
+echo "[entrypoint] settings.json: jitModelTTL.ttlSeconds=${JIT_TTL_SECONDS:-3600}, unloadPreviousJITModelOnLoad=${UNLOAD_PREVIOUS_MODEL:-false}"
 
 if [ "${LMS_RUNTIME_UPDATE:-0}" = "1" ]; then
     echo "[entrypoint] attempting to update lms runtimes..."

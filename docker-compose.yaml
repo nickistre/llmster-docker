@@ -104,6 +104,7 @@ services:
     # ========================================================================
     volumes:
       - lmstudio-data:/root/.lmstudio
+      - rocm-cache:/root/.cache
 
     # ========================================================================
     # RESOURCE LIMITS
@@ -146,5 +147,6 @@ networks:
 # =============================================================================
 volumes:
   lmstudio-data:
+  rocm-cache:
   caddy-data:
   caddy-config:
