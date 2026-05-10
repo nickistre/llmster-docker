@@ -95,6 +95,7 @@ sudo llmster-uninstall --purge
 | `LIBVA_DRIVER_NAME` | VA-API driver (`radeonsi` for AMD) |
 | `LM_STUDIO_UPDATE` | Set to `1` to re-download LM Studio on every start |
 | `LMS_RUNTIME_UPDATE` | Set to `1` to run `lms runtime update` on every start |
+| `GGML_HIP_MEM_POOL` | Set to `1` to use a pooled GPU allocator on the ROCm backend, reducing per-token hipMalloc/hipFree churn |
 
 **Quadlet port changes** require re-running `sudo quadlet/install.sh` — Quadlet `PublishPort=` is resolved at install time from the env file, not at container runtime.
 
@@ -104,3 +105,4 @@ sudo llmster-uninstall --purge
 
 - Resource limits (CPU/memory) are commented out in compose; uncomment and tune based on available hardware.
 - `pull_policy: build` means compose always builds from the Dockerfile rather than pulling from a registry; the `pull: true` inside the `build:` block keeps the base `debian:trixie-slim` image fresh.
+- **ROCm context length limit**: on a 16 GB VRAM GPU, large models (27B+) at Q3_K_S exhaust VRAM at ~32–48K context with a Q8_0 KV cache. Exceeding available VRAM causes the HIP Flash Attention kernel to SIGABRT. Keep context ≤ 32K for 27B models; ≤ 48K is the practical ceiling before GTT spill causes `amdgpu pin failed -12` kernel errors.
